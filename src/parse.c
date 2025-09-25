@@ -57,6 +57,7 @@ int validate_db_header(const int fd, struct dbheader_t **header_out) {
 	const size_t res = read(fd, dbhdr, sizeof(struct dbheader_t));
 	if (res != sizeof(struct dbheader_t)) {
 		printf("Error reading db file: %lu vs %lu\n", res, sizeof(struct dbheader_t));
+		free(dbhdr);
 		return STATUS_ERROR;
 	}
 

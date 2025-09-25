@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
         printf("DB header is invalid\n");
         close(fd);
         return 1;
-    };
+    }
 
     close(fd);
 
