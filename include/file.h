@@ -1,7 +1,10 @@
 #ifndef FILE_H
 #define FILE_H
 
-int create_db_file(char *filename);
-int open_db_file(char *filename);
+#include <stdbool.h>
+
+int create_db_file(const char *filename);
+int open_db_file(const char *filename);
+bool file_exists(char *filename);
 
 #endif

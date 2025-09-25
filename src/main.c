@@ -43,9 +43,6 @@ int main(int argc, char *argv[]) {
 			case 'h':
 				print_usage(argv);
 				return 0;
-			case '?':
-				printf("Unknown option -%c\n", c);
-				break;
 			default:
 				print_usage(argv);
 				return -1;
@@ -57,14 +54,34 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	int FD = open_db_file(filepath);
-	if (FD == -1) {
-		if (newfile) {
-			FD = create_db_file(filepath);
-		} else {
-			printf("Failed to open db file\n");
-			return 1;
-		}
+	int fd;
+	if (file_exists(filepath)) {
+		fd = open_db_file(filepath);
+	} else if (newfile) {
+		fd = create_db_file(filepath);
+	} else {
+		printf("Failed to open db file\n");
+		return 1;
 	}
+
+	if (fd == -1) {
+		printf("Failed to open db file\n");
+		return 1;
+	}
+
+	dbheader_t *dbhdr = NULL;
+	int rc = create_db_header(&dbhdr);
+	if (rc != STATUS_SUCCESS) {
+		printf("Failed to create db header\n");
+		return rc;
+	}
+
+	rc = output_file(fd, dbhdr, NULL);
+	if (rc != STATUS_SUCCESS) {
+		printf("Failed to write to db file\n");
+		return rc;
+	}
+
+	return 0;
 }
 
