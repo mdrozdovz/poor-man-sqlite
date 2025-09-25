@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	dbheader_t *dbhdr = NULL;
+	struct dbheader_t *dbhdr = NULL;
 	int rc = create_db_header(&dbhdr);
 	if (rc != STATUS_SUCCESS) {
 		printf("Failed to create db header\n");

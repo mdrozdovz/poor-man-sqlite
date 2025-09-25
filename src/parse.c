@@ -10,19 +10,19 @@
 #include "common.h"
 #include "parse.h"
 
-void list_employees(dbheader_t *dbhdr, employee_t *employees) {
+void list_employees(struct dbheader_t *dbhdr, employee_t *employees) {
 
 }
 
-int add_employee(dbheader_t *dbhdr, employee_t *employees, char *addstring) {
+int add_employee(struct dbheader_t *dbhdr, employee_t *employees, char *addstring) {
 
 }
 
-int read_employees(int fd, dbheader_t *dbhdr, employee_t **employeesOut) {
+int read_employees(int fd, struct dbheader_t *dbhdr, employee_t **employeesOut) {
 
 }
 
-int output_file(int fd, dbheader_t *dbhdr, employee_t *employees) {
+int output_file(int fd, struct dbheader_t *dbhdr, employee_t *employees) {
 	if (dbhdr == NULL) {
 		printf("DB header is NULL\n");
 		return STATUS_ERROR;
@@ -33,7 +33,7 @@ int output_file(int fd, dbheader_t *dbhdr, employee_t *employees) {
 		return STATUS_ERROR;
 	}
 
-	if (write(fd, dbhdr, sizeof(dbheader_t)) == -1) {
+	if (write(fd, dbhdr, sizeof(struct dbheader_t)) == -1) {
 		perror("write");
 		return STATUS_ERROR;
 	};
@@ -41,15 +41,15 @@ int output_file(int fd, dbheader_t *dbhdr, employee_t *employees) {
 	return STATUS_SUCCESS;
 }	
 
-int validate_db_header(int fd, dbheader_t **header_out) {
+int validate_db_header(int fd, struct dbheader_t **header_out) {
 	if (fd < 0) {
 		printf("Bad file descriptor provided\n");
 		return STATUS_ERROR;
 	}
 
-	dbheader_t *dbhdr = calloc(1, sizeof(dbheader_t));
-	const int res = read(fd, dbhdr, sizeof(dbheader_t));
-	if (res != sizeof(dbheader_t)) {
+	struct dbheader_t *dbhdr = calloc(1, sizeof(struct dbheader_t));
+	const int res = read(fd, dbhdr, sizeof(struct dbheader_t));
+	if (res != sizeof(struct dbheader_t)) {
 		printf("Error reading db file\n");
 		return STATUS_ERROR;
 	}
@@ -58,13 +58,13 @@ int validate_db_header(int fd, dbheader_t **header_out) {
 	return STATUS_SUCCESS;
 }
 
-int create_db_header(dbheader_t **header_out) {
-	dbheader_t *dbhdr = calloc(1, sizeof(dbheader_t));
+int create_db_header(struct dbheader_t **header_out) {
+	struct dbheader_t *dbhdr = calloc(1, sizeof(struct dbheader_t));
 
 	dbhdr->version = 1;
 	dbhdr->count = 0;
 	dbhdr->magic = HEADER_MAGIC;
-	dbhdr->filesize = sizeof(dbheader_t);
+	dbhdr->filesize = sizeof(struct dbheader_t);
 
 	*header_out = dbhdr;
 	return STATUS_SUCCESS;
