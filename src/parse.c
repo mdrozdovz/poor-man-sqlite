@@ -32,10 +32,12 @@ int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) 
 		printf("lseek failed\n");
 		return STATUS_ERROR;
 	}
-	// dbhdr->magic = htonl(dbhdr->magic);
-	// dbhdr->version = htons(dbhdr->version);
-	// dbhdr->count = htons(dbhdr->count);
-	// dbhdr->filesize = htonl(dbhdr->filesize);
+	printf("Original values, magic: %d, version: %d, count: %d, filesize: %d\n", dbhdr->magic, dbhdr->version, dbhdr->count, dbhdr->filesize);
+
+	dbhdr->magic = htonl(dbhdr->magic);
+	dbhdr->version = htons(dbhdr->version);
+	dbhdr->count = htons(dbhdr->count);
+	dbhdr->filesize = htonl(dbhdr->filesize);
 
 	printf("Writing values, magic: %d version: %d count: %d filesize: %d\n", dbhdr->magic, dbhdr->version, dbhdr->count, dbhdr->filesize);
 
@@ -66,12 +68,14 @@ int validate_db_header(const int fd, struct dbheader_t **header_out) {
 		free(dbhdr);
 		return STATUS_ERROR;
 	}
-	// dbhdr->magic = ntohl(dbhdr->magic);
-	// dbhdr->version = ntohs(dbhdr->version);
-	// dbhdr->count = ntohs(dbhdr->count);
-	// dbhdr->filesize = ntohl(dbhdr->magic);
-
 	printf("Reading values, magic: %d, version: %d, count: %d, filesize: %d\n", dbhdr->magic, dbhdr->version, dbhdr->count, dbhdr->filesize);
+
+	dbhdr->magic = ntohl(dbhdr->magic);
+	dbhdr->version = ntohs(dbhdr->version);
+	dbhdr->count = ntohs(dbhdr->count);
+	dbhdr->filesize = ntohl(dbhdr->filesize);
+
+	printf("Converted values, magic: %d, version: %d, count: %d, filesize: %d\n", dbhdr->magic, dbhdr->version, dbhdr->count, dbhdr->filesize);
 
 	if (dbhdr->magic != HEADER_MAGIC) {
 		printf("DB header magic is wrong\n");
