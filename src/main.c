@@ -8,6 +8,7 @@
 #include "file.h"
 #include "parse.h"
 
+
 void print_usage(char *argv[]) {
     printf("Usage: %s [options]\n", argv[0]);
     printf("Options:\n");
@@ -25,7 +26,7 @@ int main(int argc, char *argv[]) {
     char *add_record = NULL;
     unsigned short port = 0;
     bool newfile = false;
-    bool list = false;
+    bool list_records = false;
     int c;
 
     dbheader_t *dbhdr = NULL;
@@ -43,7 +44,7 @@ int main(int argc, char *argv[]) {
                 portarg = optarg;
                 break;
             case 'l':
-                list = true;
+                list_records = true;
                 break;
             case 'h':
                 print_usage(argv);
@@ -98,6 +99,13 @@ int main(int argc, char *argv[]) {
     if (rc != STATUS_SUCCESS) {
         printf("Failed to read employees\n");
         return rc;
+    }
+
+    if (list_records) {
+        printf("DB employees\n");
+        printf("------------\n");
+        list_employees(dbhdr, employees);
+        printf("------------\n");
     }
 
     if (add_record != NULL) {

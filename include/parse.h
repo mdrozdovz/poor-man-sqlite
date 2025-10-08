@@ -2,6 +2,7 @@
 #define PARSE_H
 
 #define HEADER_MAGIC 0x4c4c4144
+#define PARSE_DEBUG_PRINT false
 
 typedef struct dbheader_t {
     unsigned int magic;
@@ -26,6 +27,6 @@ int output_file(int fd, dbheader_t *dbhdr, employee_t *employees);
 
 void list_employees(dbheader_t *dbhdr, employee_t *employees);
 
-int add_employee(dbheader_t *dbhdr, employee_t **employees, char *addstring);
+int add_employee(dbheader_t *dbhdr, employee_t **employees_inout, char *addstring);
 
 #endif
