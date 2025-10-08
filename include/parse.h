@@ -3,14 +3,14 @@
 
 #define HEADER_MAGIC 0x4c4c4144
 
-typedef struct {
+typedef struct dbheader_t {
     unsigned int magic;
     unsigned short version;
     unsigned short count;
     unsigned int filesize;
 } dbheader_t;
 
-typedef struct {
+typedef struct employee_t {
     char name[256];
     char address[256];
     unsigned int hours;
