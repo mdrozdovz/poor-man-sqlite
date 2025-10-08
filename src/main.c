@@ -101,13 +101,6 @@ int main(int argc, char *argv[]) {
         return rc;
     }
 
-    if (list_records) {
-        printf("DB employees\n");
-        printf("------------\n");
-        list_employees(dbhdr, employees);
-        printf("------------\n");
-    }
-
     if (add_record != NULL) {
         rc = add_employee(dbhdr, &employees, add_record);
         if (rc != STATUS_SUCCESS) {
@@ -115,6 +108,10 @@ int main(int argc, char *argv[]) {
             close(fd);
             return rc;
         }
+    }
+
+    if (list_records) {
+        list_employees(dbhdr, employees);
     }
 
     output_file(fd, dbhdr, employees);

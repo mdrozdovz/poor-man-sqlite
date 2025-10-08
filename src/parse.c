@@ -25,7 +25,10 @@ static int assert_non_null(void *p, char *path) {
 static void print_employees(dbheader_t *dbhdr, employee_t *employees) {
     for (int i = 0; i < dbhdr->count; i++) {
         employee_t emp = employees[i];
-        printf("Employee name: %s, address: %s, hours: %d\n", emp.name, emp.address, emp.hours);
+        printf("Employee %d:\n", i);
+        printf("\tName: %s\n", emp.name);
+        printf("\tAddress: %s\n", emp.address);
+        printf("\tHours: %d\n", emp.hours);
     }
 }
 
