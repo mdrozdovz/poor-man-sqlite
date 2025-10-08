@@ -8,7 +8,6 @@
 #include "file.h"
 #include "parse.h"
 
-
 void print_usage(char *argv[]) {
     printf("Usage: %s [options]\n", argv[0]);
     printf("Options:\n");
@@ -32,7 +31,7 @@ int main(int argc, char *argv[]) {
     dbheader_t *dbhdr = NULL;
     employee_t *employees = NULL;
 
-    while ((c = getopt(argc, argv, "nf:a:l")) != -1) {
+    while ((c = getopt(argc, argv, "nlf:a:")) != -1) {
         switch (c) {
             case 'n':
                 newfile = true;
@@ -102,7 +101,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (add_record != NULL) {
-        rc = add_employee(dbhdr, &employees, add_record);
+        rc = add_employee(dbhdr, employees, add_record);
         if (rc != STATUS_SUCCESS) {
             printf("Failed to read employees\n");
             close(fd);
@@ -115,6 +114,8 @@ int main(int argc, char *argv[]) {
     }
 
     output_file(fd, dbhdr, employees);
+    free(dbhdr);
+    free(employees);
     close(fd);
 
     return 0;

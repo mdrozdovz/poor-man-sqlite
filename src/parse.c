@@ -48,11 +48,10 @@ int list_employees(dbheader_t *dbhdr, employee_t *employees) {
     return STATUS_SUCCESS;
 }
 
-int add_employee(dbheader_t *dbhdr, employee_t **employees_inout, char *addstring) {
+int add_employee(dbheader_t *dbhdr, employee_t *employees, char *addstring) {
     int assert_rc = STATUS_SUCCESS;
     assert_rc += assert_non_null(dbhdr, "dbhdr");
-    assert_rc += assert_non_null(employees_inout, "employees");
-    assert_rc += assert_non_null(*employees_inout, "*employees");
+    assert_rc += assert_non_null(employees, "employees");
     assert_rc += assert_non_null(addstring, "addstring");
 
     if (assert_rc != STATUS_SUCCESS) {
@@ -60,10 +59,9 @@ int add_employee(dbheader_t *dbhdr, employee_t **employees_inout, char *addstrin
         return STATUS_ERROR;
     }
 
-    employee_t *old_employees = *employees_inout;
-    employee_t *new_employees = realloc(*employees_inout, (dbhdr->count + 1) * sizeof(employee_t));
-    debug("Old p: %p, new p: %p\n", *employees_inout, new_employees);
-    if (new_employees == NULL) {
+    employee_t *old_employees = employees;
+    employees = realloc(employees, (dbhdr->count + 1) * sizeof(employee_t));
+    if (employees == NULL) {
         printf("Failed to re-allocate memory for employees\n");
         free(old_employees);
         return STATUS_ERROR;
@@ -75,18 +73,18 @@ int add_employee(dbheader_t *dbhdr, employee_t **employees_inout, char *addstrin
 
     debug("Before add\n");
     if (PARSE_DEBUG_PRINT)
-        print_employees(dbhdr, new_employees);
+        print_employees(dbhdr, employees);
     debug("Adding employee: [%s] [%s] [%s] \n", name, address, hours);
-    employee_t *employee = &new_employees[dbhdr->count];
+    employee_t *employee = &employees[dbhdr->count];
 
     strncpy(employee->name, name, sizeof(employee->name));
     strncpy(employee->address, address, sizeof(employee->address));
     employee->hours = atoi(hours);
 
-    *employees_inout = new_employees;
     dbhdr->count++;
-    dbhdr->filesize = dbhdr->filesize + sizeof(*employee);
+    dbhdr->filesize = dbhdr->filesize + sizeof(employee_t);
     debug("Count on add: %d\n", dbhdr->count);
+
     return STATUS_SUCCESS;
 }
 
