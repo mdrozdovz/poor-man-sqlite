@@ -60,7 +60,7 @@ int add_employee(dbheader_t *dbhdr, employee_t *employees, char *addstring) {
     }
 
     employee_t *old_employees = employees;
-    employees = realloc(employees, (dbhdr->count + 1) * sizeof(employee_t));
+    employees = reallocarray(employees, dbhdr->count + 1, sizeof(employee_t));
     if (employees == NULL) {
         printf("Failed to re-allocate memory for employees\n");
         free(old_employees);
@@ -70,6 +70,19 @@ int add_employee(dbheader_t *dbhdr, employee_t *employees, char *addstring) {
     const char *name = strtok(addstring, ",");
     const char *address = strtok(NULL, ",");
     const char *hours = strtok(NULL, ",");
+
+    assert_rc += assert_non_null((void*) name, "name");
+    assert_rc += assert_non_null((void*) address, "address");
+    assert_rc += assert_non_null((void*) hours, "hours");
+    if (assert_rc != STATUS_SUCCESS) {
+        printf("add_employee() assert failed");
+        return STATUS_ERROR;
+    }
+
+    if (!strlen(name) || !strlen(address) || !strlen(hours)) {
+        printf("Got empty shit in employee add string\n");
+        return STATUS_ERROR;
+    }
 
     debug("Before add\n");
     if (PARSE_DEBUG_PRINT)
