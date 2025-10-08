@@ -22,10 +22,14 @@ void print_usage(char *argv[]) {
 int main(int argc, char *argv[]) {
     char *filepath = NULL;
     char *portarg = NULL;
+    char *add_record = NULL;
     unsigned short port = 0;
     bool newfile = false;
     bool list = false;
     int c;
+
+    dbheader_t *dbhdr = NULL;
+    employee_t *employees = NULL;
 
     while ((c = getopt(argc, argv, "nf:a:l")) != -1) {
         switch (c) {
@@ -44,6 +48,9 @@ int main(int argc, char *argv[]) {
             case 'h':
                 print_usage(argv);
                 return 0;
+            case 'a':
+                add_record = optarg;
+                break;
             default:
                 print_usage(argv);
                 return -1;
@@ -56,10 +63,21 @@ int main(int argc, char *argv[]) {
     }
 
     int fd;
+    int rc = 0;
     if (file_exists(filepath)) {
         fd = open_db_file(filepath);
     } else if (newfile) {
         fd = create_db_file(filepath);
+        rc = create_db_header(&dbhdr);
+        if (rc != STATUS_SUCCESS) {
+            printf("Failed to create db header\n");
+            return rc;
+        }
+        rc = output_file(fd, dbhdr, NULL);
+        if (rc != STATUS_SUCCESS) {
+            printf("Failed to write to db file\n");
+            return rc;
+        }
     } else {
         printf("Failed to open db file\n");
         return 1;
@@ -70,25 +88,37 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    struct dbheader_t *dbhdr = NULL;
-    int rc = create_db_header(&dbhdr);
-    if (rc != STATUS_SUCCESS) {
-        printf("Failed to create db header\n");
-        return rc;
-    }
-
-    rc = output_file(fd, dbhdr, NULL);
-    if (rc != STATUS_SUCCESS) {
-        printf("Failed to write to db file\n");
-        return rc;
-    }
-
     if (validate_db_header(fd, &dbhdr) != STATUS_SUCCESS) {
         printf("DB header is invalid\n");
         close(fd);
         return 1;
     }
 
+    rc = read_employees(fd, dbhdr, &employees);
+    if (rc != STATUS_SUCCESS) {
+        printf("Failed to read employees\n");
+        return rc;
+    }
+
+    if (add_record != NULL) {
+        employee_t *old_employees = employees;
+        employees = realloc(employees, (dbhdr->count + 1) * sizeof(employee_t));
+        if (employees ==  NULL) {
+            printf("Failed to re-allocate memory for employees\n");
+            free(old_employees);
+            close(fd);
+            return 1;
+        }
+
+        rc = add_employee(dbhdr, employees, add_record);
+        if (rc != STATUS_SUCCESS) {
+            printf("Failed to read employees\n");
+            close(fd);
+            return rc;
+        }
+    }
+
+    output_file(fd, dbhdr, employees);
     close(fd);
 
     return 0;

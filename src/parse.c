@@ -10,19 +10,47 @@
 #include "common.h"
 #include "parse.h"
 
-void list_employees(struct dbheader_t *dbhdr, struct employee_t *employees) {
+void list_employees(dbheader_t *dbhdr, employee_t *employees) {
 
 }
 
-int add_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char *addstring) {
+int add_employee(dbheader_t *dbhdr, employee_t *employees, char *addstring) {
+	const char* name = strtok(addstring, ",");
+	const char* address = strtok(NULL, ",");
+	const char* hours = strtok(NULL, ",");
 
+	printf("Adding employee: [%s] [%s] [%s] \n", name, address, hours);
+	employee_t employee = employees[dbhdr->count];
+
+	strncpy(employee.name, name, sizeof(employee.name));
+	strncpy(employee.address, address, sizeof(employee.address));
+	employee.hours = atoi(hours);
+
+	dbhdr->count++;
+	dbhdr->filesize = dbhdr->filesize + sizeof(employee);
+	printf("Count on add: %d\n", dbhdr->count);
+	return STATUS_SUCCESS;
 }
 
-int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employeesOut) {
+int read_employees(int fd, dbheader_t *dbhdr, employee_t **employees_out) {
+	const int count = dbhdr->count;
 
+	employee_t *employees = calloc(count, sizeof(employee_t));
+	if (employees == NULL) {
+		printf("Failed to allocate memory for employees\n");
+		return STATUS_ERROR;
+	}
+
+	read(fd, employees, count);
+	for (int i = 0; i < count; i++) {
+		employees[i].hours = ntohl(employees[i].hours);
+	}
+
+	*employees_out = employees;
+	return STATUS_SUCCESS;
 }
 
-int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) {
+int output_file(int fd, dbheader_t *dbhdr, employee_t *employees) {
 	if (dbhdr == NULL) {
 		printf("DB header is NULL\n");
 		return STATUS_ERROR;
@@ -41,15 +69,25 @@ int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) 
 
 	printf("Writing values, magic: %d version: %d count: %d filesize: %d\n", dbhdr->magic, dbhdr->version, dbhdr->count, dbhdr->filesize);
 
-	if (write(fd, dbhdr, sizeof(struct dbheader_t)) == -1) {
+	if (write(fd, dbhdr, sizeof(dbheader_t)) == -1) {
 		perror("write");
 		return STATUS_ERROR;
+	}
+
+	if (employees == NULL) {
+		printf("Employees is NULL, skipping writing\n");
+	} else {
+		printf("Count on write: %d\n", ntohs(dbhdr->count));
+		if (write(fd, employees, sizeof(employee_t) * ntohs(dbhdr->count)) == -1) {
+			perror("write");
+			return STATUS_ERROR;
+		}
 	}
 
 	return STATUS_SUCCESS;
 }	
 
-int validate_db_header(const int fd, struct dbheader_t **header_out) {
+int validate_db_header(const int fd, dbheader_t **header_out) {
 	if (header_out == NULL) {
 		printf("DB header out pointer is NULL\n");
 		return STATUS_ERROR;
@@ -60,11 +98,11 @@ int validate_db_header(const int fd, struct dbheader_t **header_out) {
 		return STATUS_ERROR;
 	}
 
-	struct dbheader_t *dbhdr = calloc(1, sizeof(struct dbheader_t));
+	dbheader_t *dbhdr = calloc(1, sizeof(dbheader_t));
 	lseek(fd, 0, SEEK_SET);
-	const size_t res = read(fd, dbhdr, sizeof(struct dbheader_t));
-	if (res != sizeof(struct dbheader_t)) {
-		printf("Error reading db file: %lu vs %lu\n", res, sizeof(struct dbheader_t));
+	const size_t res = read(fd, dbhdr, sizeof(dbheader_t));
+	if (res != sizeof(dbheader_t)) {
+		printf("Error reading db file: %lu vs %lu\n", res, sizeof(dbheader_t));
 		free(dbhdr);
 		return STATUS_ERROR;
 	}
@@ -106,18 +144,18 @@ int validate_db_header(const int fd, struct dbheader_t **header_out) {
 	return STATUS_SUCCESS;
 }
 
-int create_db_header(struct dbheader_t **header_out) {
+int create_db_header(dbheader_t **header_out) {
 	if (header_out == NULL) {
 		printf("DB header out pointer is NULL\n");
 		return STATUS_ERROR;
 	}
 
-	struct dbheader_t *dbhdr = calloc(1, sizeof(struct dbheader_t));
+	dbheader_t *dbhdr = calloc(1, sizeof(dbheader_t));
 
 	dbhdr->version = 1;
 	dbhdr->count = 0;
 	dbhdr->magic = HEADER_MAGIC;
-	dbhdr->filesize = sizeof(struct dbheader_t);
+	dbhdr->filesize = sizeof(dbheader_t);
 
 	*header_out = dbhdr;
 	return STATUS_SUCCESS;
