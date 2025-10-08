@@ -101,16 +101,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (add_record != NULL) {
-        employee_t *old_employees = employees;
-        employees = realloc(employees, (dbhdr->count + 1) * sizeof(employee_t));
-        if (employees ==  NULL) {
-            printf("Failed to re-allocate memory for employees\n");
-            free(old_employees);
-            close(fd);
-            return 1;
-        }
-
-        rc = add_employee(dbhdr, employees, add_record);
+        rc = add_employee(dbhdr, &employees, add_record);
         if (rc != STATUS_SUCCESS) {
             printf("Failed to read employees\n");
             close(fd);
