@@ -10,11 +10,30 @@
 #include "common.h"
 #include "parse.h"
 
+static int assert_non_null(void *p, char *path) {
+	if (p == NULL) {
+		printf("%s is required, but got NULL\n", path);
+		return STATUS_ERROR;
+	}
+
+	return STATUS_SUCCESS;
+}
+
 void list_employees(dbheader_t *dbhdr, employee_t *employees) {
 
 }
 
 int add_employee(dbheader_t *dbhdr, employee_t *employees, char *addstring) {
+	int assert_rc = STATUS_SUCCESS;
+	assert_rc += assert_non_null(dbhdr, "dbhdr");
+	assert_rc += assert_non_null(employees, "employees");
+	assert_rc += assert_non_null(addstring, "addstring");
+
+	if (assert_rc != STATUS_SUCCESS) {
+		printf("add_employee() assert failed");
+		return STATUS_ERROR;
+	}
+
 	const char* name = strtok(addstring, ",");
 	const char* address = strtok(NULL, ",");
 	const char* hours = strtok(NULL, ",");
