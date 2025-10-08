@@ -43,8 +43,9 @@ void debug(const char *format, ...) {
     va_end(vlist);
 }
 
-void list_employees(dbheader_t *dbhdr, employee_t *employees) {
+int list_employees(dbheader_t *dbhdr, employee_t *employees) {
     print_employees(dbhdr, employees);
+    return STATUS_SUCCESS;
 }
 
 int add_employee(dbheader_t *dbhdr, employee_t **employees_inout, char *addstring) {

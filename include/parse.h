@@ -25,7 +25,7 @@ int read_employees(int fd, dbheader_t *dbhdr, employee_t **employees_out);
 
 int output_file(int fd, dbheader_t *dbhdr, employee_t *employees);
 
-void list_employees(dbheader_t *dbhdr, employee_t *employees);
+int list_employees(dbheader_t *dbhdr, employee_t *employees);
 
 int add_employee(dbheader_t *dbhdr, employee_t **employees_inout, char *addstring);
 
