@@ -48,7 +48,7 @@ int add_employee(dbheader_t *dbhdr, employee_t **employees, char *addstring) {
 	const char* hours = strtok(NULL, ",");
 
 	printf("Adding employee: [%s] [%s] [%s] \n", name, address, hours);
-	employee_t employee = *employees[dbhdr->count];
+	employee_t employee = new_employees[dbhdr->count];
 
 	strncpy(employee.name, name, sizeof(employee.name));
 	strncpy(employee.address, address, sizeof(employee.address));
