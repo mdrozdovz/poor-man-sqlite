@@ -105,6 +105,15 @@ int add_employee(dbheader_t *dbhdr, employee_t **employees, char *addstring) {
 }
 
 int read_employees(int fd, dbheader_t *dbhdr, employee_t **employees_out) {
+    int assert_rc = STATUS_SUCCESS;
+    assert_rc += assert_non_null(dbhdr, "dbhdr");
+    assert_rc += assert_non_null(employees_out, "employees_out");
+
+    if (assert_rc != STATUS_SUCCESS) {
+        printf("add_employee() assert failed\n");
+        return STATUS_ERROR;
+    }
+
     const int count = dbhdr->count;
 
     employee_t *employees = calloc(count, sizeof(employee_t));
