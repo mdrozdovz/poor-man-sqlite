@@ -13,7 +13,7 @@
 
 #include <stdbool.h>
 
-static int assert_non_null(void *p, char *path) {
+static int assert_non_null(const void *p, char *path) {
     if (p == NULL) {
         printf("%s is required, but got NULL\n", path);
         return STATUS_ERROR;
@@ -48,10 +48,11 @@ int list_employees(dbheader_t *dbhdr, employee_t *employees) {
     return STATUS_SUCCESS;
 }
 
-int add_employee(dbheader_t *dbhdr, employee_t *employees, char *addstring) {
+int add_employee(dbheader_t *dbhdr, employee_t **employees, char *addstring) {
     int assert_rc = STATUS_SUCCESS;
     assert_rc += assert_non_null(dbhdr, "dbhdr");
     assert_rc += assert_non_null(employees, "employees");
+    assert_rc += assert_non_null(*employees, "*employees");
     assert_rc += assert_non_null(addstring, "addstring");
 
     if (assert_rc != STATUS_SUCCESS) {
@@ -59,9 +60,9 @@ int add_employee(dbheader_t *dbhdr, employee_t *employees, char *addstring) {
         return STATUS_ERROR;
     }
 
-    employee_t *old_employees = employees;
-    employees = reallocarray(employees, dbhdr->count + 1, sizeof(employee_t));
-    if (employees == NULL) {
+    employee_t *old_employees = *employees;
+    employee_t *new_employees = reallocarray(*employees, dbhdr->count + 1, sizeof(employee_t));
+    if (new_employees == NULL) {
         printf("Failed to re-allocate memory for employees\n");
         free(old_employees);
         return STATUS_ERROR;
@@ -86,9 +87,9 @@ int add_employee(dbheader_t *dbhdr, employee_t *employees, char *addstring) {
 
     debug("Before add\n");
     if (PARSE_DEBUG_PRINT)
-        print_employees(dbhdr, employees);
+        print_employees(dbhdr, new_employees);
     debug("Adding employee: [%s] [%s] [%s] \n", name, address, hours);
-    employee_t *employee = &employees[dbhdr->count];
+    employee_t *employee = &new_employees[dbhdr->count];
 
     strncpy(employee->name, name, sizeof(employee->name));
     strncpy(employee->address, address, sizeof(employee->address));
@@ -97,6 +98,7 @@ int add_employee(dbheader_t *dbhdr, employee_t *employees, char *addstring) {
     dbhdr->count++;
     dbhdr->filesize = dbhdr->filesize + sizeof(employee_t);
     debug("Count on add: %d\n", dbhdr->count);
+    *employees = new_employees;
 
     return STATUS_SUCCESS;
 }
