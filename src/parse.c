@@ -52,11 +52,12 @@ int add_employee(dbheader_t *dbhdr, employee_t **employees, char *addstring) {
     int assert_rc = STATUS_SUCCESS;
     assert_rc += assert_non_null(dbhdr, "dbhdr");
     assert_rc += assert_non_null(employees, "employees");
-    assert_rc += assert_non_null(*employees, "*employees");
     assert_rc += assert_non_null(addstring, "addstring");
+    if (assert_rc == STATUS_SUCCESS)
+        assert_rc += assert_non_null(*employees, "*employees"); // Don't try to dereference employees if it's NULL
 
     if (assert_rc != STATUS_SUCCESS) {
-        printf("add_employee() assert failed");
+        printf("add_employee() assert failed\n");
         return STATUS_ERROR;
     }
 

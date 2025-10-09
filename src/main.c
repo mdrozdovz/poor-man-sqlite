@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
     if (add_record != NULL) {
         rc = add_employee(dbhdr, &employees, add_record);
         if (rc != STATUS_SUCCESS) {
-            printf("Failed to read employees\n");
+            printf("Failed to add employee\n");
             close(fd);
             return rc;
         }
