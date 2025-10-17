@@ -44,6 +44,9 @@ void debug(const char *format, ...) {
 }
 
 int list_employees(dbheader_t *dbhdr, employee_t *employees) {
+    if (dbhdr == NULL)
+        return STATUS_ERROR;
+
     print_employees(dbhdr, employees);
     return STATUS_SUCCESS;
 }
@@ -115,6 +118,7 @@ int read_employees(int fd, dbheader_t *dbhdr, employee_t **employees_out) {
     }
 
     const int count = dbhdr->count;
+    printf("Reading %d employees\n", count);
 
     employee_t *employees = calloc(count, sizeof(employee_t));
     if (employees == NULL) {

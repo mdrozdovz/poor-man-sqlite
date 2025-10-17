@@ -95,6 +95,7 @@ int main(int argc, char *argv[]) {
     }
 
     rc = read_employees(fd, dbhdr, &employees);
+    printf("employees after read: %p\n", employees);
     if (rc != STATUS_SUCCESS) {
         printf("Failed to read employees\n");
         return rc;
