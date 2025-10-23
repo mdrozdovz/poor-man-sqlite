@@ -15,6 +15,8 @@ void print_usage(char *argv[]) {
     printf("\t-n\t\t\tCreate new file if it does not exist\n");
     printf("\t-f <filepath>\t\tDB file path\n");
     printf("\t-l\t\t\tList all employees\n");
+    printf("\t-u\t\t\tUpdate employee's work hours by a given name\n");
+    printf("\t-d\t\t\tDelete employee by name\n");
     printf("\t-p\t\t\tPort to listen to for incoming connections\n");
     printf("\n");
 }
@@ -23,6 +25,8 @@ int main(int argc, char *argv[]) {
     char *filepath = NULL;
     char *portarg = NULL;
     char *add_record = NULL;
+    char *delete_name = NULL;
+    char *update_record = NULL;
     unsigned short port = 0;
     bool newfile = false;
     bool list_records = false;
@@ -31,7 +35,7 @@ int main(int argc, char *argv[]) {
     dbheader_t *dbhdr = NULL;
     employee_t *employees = NULL;
 
-    while ((c = getopt(argc, argv, "nlf:a:")) != -1) {
+    while ((c = getopt(argc, argv, "nlf:a:u:d:")) != -1) {
         switch (c) {
             case 'n':
                 newfile = true;
@@ -45,12 +49,18 @@ int main(int argc, char *argv[]) {
             case 'l':
                 list_records = true;
                 break;
-            case 'h':
-                print_usage(argv);
-                return 0;
             case 'a':
                 add_record = optarg;
                 break;
+            case 'd':
+                delete_name = optarg;
+                break;
+            case 'u':
+                update_record = optarg;
+                break;
+            case 'h':
+                print_usage(argv);
+                return 0;
             default:
                 print_usage(argv);
                 return -1;
@@ -105,6 +115,24 @@ int main(int argc, char *argv[]) {
         rc = add_employee(dbhdr, &employees, add_record);
         if (rc != STATUS_SUCCESS) {
             printf("Failed to add employee\n");
+            close(fd);
+            return rc;
+        }
+    }
+
+    if (update_record != NULL) {
+        rc = update_employee_hours(dbhdr, employees, update_record);
+        if (rc != STATUS_SUCCESS) {
+            printf("Failed to update employee's work hours\n");
+            close(fd);
+            return rc;
+        }
+    }
+
+    if (delete_name != NULL) {
+        rc = delete_employee(dbhdr, &employees, delete_name);
+        if (rc != STATUS_SUCCESS) {
+            printf("Failed to delete employee\n");
             close(fd);
             return rc;
         }

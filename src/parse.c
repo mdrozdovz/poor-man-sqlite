@@ -51,11 +51,11 @@ int list_employees(dbheader_t *dbhdr, employee_t *employees) {
     return STATUS_SUCCESS;
 }
 
-int add_employee(dbheader_t *dbhdr, employee_t **employees, char *addstring) {
+int add_employee(dbheader_t *dbhdr, employee_t **employees, char *add_string) {
     int assert_rc = STATUS_SUCCESS;
     assert_rc += assert_non_null(dbhdr, "dbhdr");
     assert_rc += assert_non_null(employees, "employees");
-    assert_rc += assert_non_null(addstring, "addstring");
+    assert_rc += assert_non_null(add_string, "addstring");
     if (assert_rc == STATUS_SUCCESS)
         assert_rc += assert_non_null(*employees, "*employees"); // Don't try to dereference employees if it's NULL
 
@@ -72,7 +72,7 @@ int add_employee(dbheader_t *dbhdr, employee_t **employees, char *addstring) {
         return STATUS_ERROR;
     }
 
-    const char *name = strtok(addstring, ",");
+    const char *name = strtok(add_string, ",");
     const char *address = strtok(NULL, ",");
     const char *hours = strtok(NULL, ",");
 
@@ -103,6 +103,111 @@ int add_employee(dbheader_t *dbhdr, employee_t **employees, char *addstring) {
     dbhdr->filesize = dbhdr->filesize + sizeof(employee_t);
     debug("Count on add: %d\n", dbhdr->count);
     *employees = new_employees;
+
+    return STATUS_SUCCESS;
+}
+
+int delete_employee(dbheader_t *dbhdr, employee_t **employees, char *name) {
+    int assert_rc = STATUS_SUCCESS;
+    assert_rc += assert_non_null(dbhdr, "dbhdr");
+    assert_rc += assert_non_null(employees, "employees");
+    assert_rc += assert_non_null(name, "name");
+    if (assert_rc == STATUS_SUCCESS)
+        assert_rc += assert_non_null(*employees, "*employees"); // Don't try to dereference employees if it's NULL
+
+    if (assert_rc != STATUS_SUCCESS) {
+        printf("delete_employee() assert failed\n");
+        return STATUS_ERROR;
+    }
+
+    employee_t *old_employees = *employees;
+    employee_t *employee = NULL;
+    int delete_idx = -1;
+    for (int i = 0; i < dbhdr->count; i++) {
+        if (strcmp(old_employees[i].name, name) == 0) {
+            employee = &old_employees[i];
+            delete_idx = i;
+            break;
+        }
+    }
+
+    if (employee == NULL) {
+        printf("Employee [%s] not found\n", name);
+        return STATUS_ERROR;
+    }
+
+    debug("Before delete\n");
+    if (PARSE_DEBUG_PRINT)
+        print_employees(dbhdr, old_employees);
+    debug("Deleting employee: [%s] [%s] [%d] \n", employee->name, employee->address, employee->hours);
+
+    // Shifting employees data to the left
+    for (int i = delete_idx; i < dbhdr->count - 1; i++) {
+        old_employees[i] = old_employees[i + 1];
+    }
+
+    employee_t *new_employees = realloc(old_employees, (dbhdr->count - 1) * sizeof(employee_t));
+    if (new_employees == NULL) {
+        printf("Failed to re-allocate memory for employees\n");
+        free(old_employees);
+        return STATUS_ERROR;
+    }
+
+    if (old_employees != new_employees) {
+        debug("Freeing old employees: %p\n", old_employees);
+        free(old_employees);
+    }
+
+    dbhdr->count--;
+    dbhdr->filesize = dbhdr->filesize - sizeof(employee_t);
+    debug("Count on delete: %d\n", dbhdr->count);
+    *employees = new_employees;
+
+    return STATUS_SUCCESS;
+}
+
+int update_employee_hours(dbheader_t *dbhdr, employee_t *employees, char *update_string) {
+    int assert_rc = STATUS_SUCCESS;
+    assert_rc += assert_non_null(dbhdr, "dbhdr");
+    assert_rc += assert_non_null(employees, "employees");
+    assert_rc += assert_non_null(update_string, "update_string");
+
+    if (assert_rc != STATUS_SUCCESS) {
+        printf("add_employee() assert failed\n");
+        return STATUS_ERROR;
+    }
+
+    const char *name = strtok(update_string, ",");
+    const char *hours = strtok(NULL, ",");
+
+    assert_rc += assert_non_null((void*) name, "name");
+    assert_rc += assert_non_null((void*) hours, "hours");
+    if (assert_rc != STATUS_SUCCESS) {
+        printf("update_employee_hours() assert failed");
+        return STATUS_ERROR;
+    }
+
+    if (!strlen(name) || !strlen(hours)) {
+        printf("Got empty shit in employee update string\n");
+        return STATUS_ERROR;
+    }
+
+    debug("Updating employee hours: [%s] [%s] \n", name, hours);
+    employee_t *employee = NULL;
+
+    for (int i = 0; i < dbhdr->count; i++) {
+        if (strcmp(employees[i].name, name) == 0) {
+            employee = &employees[i];
+            break;
+        }
+    }
+
+    if (employee == NULL) {
+        printf("Employee [%s] not found\n", name);
+        return STATUS_ERROR;
+    }
+
+    employee->hours = atoi(hours);
 
     return STATUS_SUCCESS;
 }
@@ -140,6 +245,11 @@ int read_employees(int fd, dbheader_t *dbhdr, employee_t **employees_out) {
 int output_file(int fd, dbheader_t *dbhdr, employee_t *employees) {
     if (dbhdr == NULL) {
         printf("DB header is NULL\n");
+        return STATUS_ERROR;
+    }
+
+    if (ftruncate(fd, 0) != 0) {
+        perror("ftruncate");
         return STATUS_ERROR;
     }
 
