@@ -1,6 +1,9 @@
 TARGET = bin/dbview
+CLIENT_TARGET = bin/client
 SRC = $(wildcard src/*.c)
+CLIENT_SRC = $(wildcard client/*.c)
 OBJ = $(patsubst src/%.c, build/%.o, $(SRC))
+CLIENT_OBJ = $(patsubst src/%.c, build/%.o, $(CLIENT_SRC))
 
 run: clean default
 	./$(TARGET) -f ./mynewdb.db -n
@@ -16,7 +19,10 @@ run: clean default
 	./$(TARGET) -f ./mynewdb.db -l
 
 
-default: $(TARGET)
+run-server: clean default
+	./$(TARGET) -f ./mynewdb.db -n -p 3412
+
+default: $(TARGET) $(CLIENT_TARGET)
 
 clean:
 	rm -f obj/*.o
@@ -26,7 +32,10 @@ clean:
 $(TARGET): $(OBJ)
 	gcc -o $@ $?
 
-build/%.o : src/%.c
+$(CLIENT_TARGET): $(CLIENT_OBJ)
+	gcc -o $@ $?
+
+build/%.o: src/%.c
 	gcc -c $< -o $@ -Iinclude
 
 
