@@ -1,38 +1,38 @@
-TARGET = bin/dbview
-CLIENT_TARGET = bin/client
-SRC = $(wildcard src/*.c)
-CLIENT_SRC = $(wildcard client/*.c)
-OBJ = $(patsubst src/%.c, build/%.o, $(SRC))
-CLIENT_OBJ = $(patsubst src/%.c, build/%.o, $(CLIENT_SRC))
+SRV_TARGET = bin/dbview
+CLI_TARGET = bin/client
+SRV_SRC = $(wildcard src/*.c)
+CLI_SRC = $(wildcard client/*.c)
+SRV_OBJ = $(patsubst src/%.c, build/%.o, $(SRV_SRC))
+CLI_OBJ = $(patsubst src/%.c, build/%.o, $(CLI_SRC))
 
 run: clean default
-	./$(TARGET) -f ./mynewdb.db -n
+	./$(SRV_TARGET) -f ./mynewdb.db -n
 	@echo "===== Adding ====="
-	./$(TARGET) -f ./mynewdb.db -a "Timmy H.,123 Sheshire Ln.,120"
-	./$(TARGET) -f ./mynewdb.db -a "Tony A.,456 Sheshire Ln.,40"
-	./$(TARGET) -f ./mynewdb.db -l
+	./$(SRV_TARGET) -f ./mynewdb.db -a "Timmy H.,123 Sheshire Ln.,120"
+	./$(SRV_TARGET) -f ./mynewdb.db -a "Tony A.,456 Sheshire Ln.,40"
+	./$(SRV_TARGET) -f ./mynewdb.db -l
 	@echo "===== Updating ====="
-	./$(TARGET) -f ./mynewdb.db -u "Tony A.,60"
-	./$(TARGET) -f ./mynewdb.db -l
+	./$(SRV_TARGET) -f ./mynewdb.db -u "Tony A.,60"
+	./$(SRV_TARGET) -f ./mynewdb.db -l
 	@echo "===== Deleting ====="
-	./$(TARGET) -f ./mynewdb.db -d "Timmy H."
-	./$(TARGET) -f ./mynewdb.db -l
+	./$(SRV_TARGET) -f ./mynewdb.db -d "Timmy H."
+	./$(SRV_TARGET) -f ./mynewdb.db -l
 
 
 run-server: clean default
-	./$(TARGET) -f ./mynewdb.db -n -p 3412
+	./$(SRV_TARGET) -f ./mynewdb.db -n -p 3412
 
-default: $(TARGET) $(CLIENT_TARGET)
+default: SRV_TARGET CLI_TARGET
 
 clean:
 	rm -f obj/*.o
 	rm -f bin/*
 	rm -f *.db
 
-$(TARGET): $(OBJ)
+$(SRV_TARGET): SRV_OBJ
 	gcc -o $@ $?
 
-$(CLIENT_TARGET): $(CLIENT_OBJ)
+$(CLI_TARGET): CLI_OBJ
 	gcc -o $@ $?
 
 build/%.o: src/%.c

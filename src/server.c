@@ -12,7 +12,7 @@
 #include <arpa/inet.h>
 
 #include <sys/socket.h>
-#include <sys/select.h>
+#include <sys/poll.h>
 #include <netinet/in.h>
 
 #define MAX_CLIENTS 1024
@@ -32,7 +32,6 @@ typedef struct {
 
 static client_info_t clients[MAX_CLIENTS];
 static int sfd = -1;
-static int nfds = -1;
 
 int start_server(const unsigned short port, const int backlog) {
     struct sockaddr_in server_info = {0};
@@ -64,7 +63,6 @@ int start_server(const unsigned short port, const int backlog) {
     for (int i = 0; i < MAX_CLIENTS; i++) {
         clients[i].sock = -1;
     }
-    nfds = sfd + 1;
 
     return sfd;
 }
@@ -76,8 +74,11 @@ static int find_free_slot() {
     return -1;
 }
 
-static int max(const int a, const int b) {
-    return a > b ? a : b;
+static int find_client_slot(const int socket) {
+    for (int i = 0; i < MAX_CLIENTS; i++) {
+        if (clients[i].sock == socket) return i;
+    }
+    return -1;
 }
 
 int accept_connections(const int server_fd) {
@@ -99,7 +100,6 @@ int accept_connections(const int server_fd) {
     client_info_t *info = &clients[idx];
     info->sock = sock;
     info->state = CONNECTED;
-    nfds = max(nfds, sock) + 1;
 
     return sock;
 }
@@ -116,10 +116,6 @@ int close_connection(const int sock) {
     shutdown(sock, SHUT_RDWR);
     close(sock);
     return 0;
-}
-
-void send_client_hello(const int client_sock) {
-    write_socket(client_sock, "Hi there");
 }
 
 void handle_client(const int sock) {
@@ -139,7 +135,7 @@ void handle_client(const int sock) {
 void handle_read(client_info_t *client) {
     const size_t bytes_read = read(client->sock, client->buf, sizeof(client->buf));
     if (bytes_read <= 0) {
-        printf("Client disconnected or erred: %d\n", client->sock);
+        printf("[%d] Client disconnected or erred\n", client->sock);
         close_connection(client->sock);
         client->sock = -1;
         client->state = DISCONNECTED;
@@ -147,7 +143,7 @@ void handle_read(client_info_t *client) {
         return;
     }
 
-    printf("Client sent: %s\n", client->buf);
+    printf("[%d] Client sent: %s\n", client->sock, client->buf);
 }
 
 void handle_write(client_info_t *client) {
@@ -161,7 +157,7 @@ void handle_write(client_info_t *client) {
     int *data = &hdr[1];
     *data = htonl(1); // protocol version one, packed
     const size_t bytes_written = write(client->sock, hdr, sizeof(proto_hdr_t) + real_len);
-    if (bytes_written == -1) {
+    if (bytes_written <= 0) {
         perror("write");
         close_connection(client->sock);
         client->sock = -1;
@@ -171,34 +167,39 @@ void handle_write(client_info_t *client) {
 }
 
 void tick_server() {
-    fd_set reads, writes;
-    FD_ZERO(&reads);
-    FD_ZERO(&writes);
-    FD_SET(sfd, &reads);
+    struct pollfd fds[MAX_CLIENTS];
+    fds[0].fd = sfd;
+    fds[0].events = POLLIN;
+
+    int active_socks = 1;
     for (int i = 0; i < MAX_CLIENTS; i++) {
         const client_info_t *client = &clients[i];
         if (client->sock != -1) {
-            FD_SET(client->sock, &reads);
-            FD_SET(client->sock, &writes);
+            fds[active_socks].fd = client->sock;
+            fds[active_socks].events = POLLIN | POLLOUT;
+            active_socks++;
         }
     }
 
-    const int ready_count = select(nfds, &reads, &writes, NULL, NULL);
+    const int ready_count = poll(fds, active_socks, -1);
     if (ready_count == -1) {
-        perror("select");
+        perror("poll");
         return;
     }
 
-    if (FD_ISSET(sfd, &reads)) {
+    if (fds[0].revents & POLLIN) {
         accept_connections(sfd);
     }
 
-    for (int i = 0; i < MAX_CLIENTS; i++) {
-        client_info_t *client = &clients[i];
-        if (client->sock != -1 && FD_ISSET(client->sock, &reads)) {
+    // Skip listening socket fds[0]
+    for (int i = 1; i < active_socks; i++) {
+        const int active_fd = fds[i].fd;
+        const int client_slot = find_client_slot(active_fd);
+        client_info_t *client = &clients[client_slot];
+        if (fds[i].revents & POLLIN) {
             handle_read(client);
         }
-        if (client->sock != -1 && FD_ISSET(client->sock, &writes)) {
+        if (fds[i].revents & POLLOUT) {
             handle_write(client);
         }
     }

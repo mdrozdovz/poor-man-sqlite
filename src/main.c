@@ -97,11 +97,16 @@ static void cleanup(const int sig) {
     exit(0);
 }
 
+static void continue_execution(const int sig) {
+    if (sig >= 0) printf("\nGot signal %d\n ", sig);
+}
+
 int main(int argc, char *argv[]) {
     struct sigaction act = {0};
     act.sa_flags = SA_RESETHAND;
     act.sa_sigaction = (void (*)(int, siginfo_t *, void *)) &cleanup;
     sigaction(SIGINT, &act, NULL);
+    sigaction(SIGPIPE, &act, NULL);
 
     dbheader_t *dbhdr = NULL;
     employee_t *employees = NULL;
