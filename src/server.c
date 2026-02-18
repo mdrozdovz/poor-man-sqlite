@@ -124,14 +124,14 @@ int close_connection(const int sock) {
 
 void handle_client(const int sock) {
     const char buf[4096] = {0};
-    proto_hdr_t *hdr = buf;
+    proto_hdr_t *hdr = (proto_hdr_t *) buf;
 
     hdr->type = htonl(PROTO_HELLO); // pack the type
     hdr->len = sizeof(int);
     const unsigned int real_len = hdr->len;
     hdr->len = htons(hdr->len); // pack the len
 
-    int *data = &hdr[1];
+    int *data = (int *) &hdr[1];
     *data = htonl(1); // protocol version one, packed
     write(sock, hdr, sizeof(proto_hdr_t) + real_len);
 }
@@ -153,14 +153,14 @@ void handle_read(client_info_t *client) {
 
 void handle_write(client_info_t *client) {
     printf("write");
-    proto_hdr_t *hdr = client->buf;
+    proto_hdr_t *hdr = (proto_hdr_t *) client->buf;
 
     hdr->type = htonl(PROTO_HELLO); // pack the type
     hdr->len = sizeof(int);
     const unsigned int real_len = hdr->len;
     hdr->len = htons(hdr->len); // pack the len
 
-    int *data = &hdr[1];
+    int *data = (int *) &hdr[1];
     *data = htonl(1); // protocol version one, packed
     const size_t bytes_written = write(client->sock, hdr, sizeof(proto_hdr_t) + real_len);
     if (bytes_written <= 0) {

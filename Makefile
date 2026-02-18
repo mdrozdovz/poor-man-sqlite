@@ -17,7 +17,7 @@ WARNINGS = -Wall -Wextra -pedantic -Wshadow -Wpointer-arith -Wcast-align \
             -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations \
             -Wredundant-decls -Wnested-externs -Winline -Wno-long-long \
             -Wconversion -Wstrict-prototypes
-CFLAGS = -g -I$(DEP_DIR) $(WARNINGS)
+CFLAGS = -g -I$(DEP_DIR) #$(WARNINGS)
 
 
 run: clean build

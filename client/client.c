@@ -46,12 +46,12 @@ int print_server_response(const int sock) {
 
 void handle_server_response(int fd) {
     char buf[4096] = {0};
-    proto_hdr_t *hdr = buf;
+    proto_hdr_t *hdr = (proto_hdr_t *) buf;
     read(fd, hdr, sizeof(proto_hdr_t) + sizeof(int));
     hdr->type = ntohl(hdr->type); // unpack the type
     hdr->len = ntohl(hdr->len);
 
-    int *data = &hdr[1];
+    int *data = (int *) &hdr[1];
     *data = ntohl(*data); // protocol version one, packed
 
     if (*data != 1) {
