@@ -5,15 +5,6 @@
 #ifndef ZERO2HERO_SERVER_H
 #define ZERO2HERO_SERVER_H
 
-typedef enum {
-    PROTO_HELLO,
-} proto_type_e;
-
-typedef struct {
-    proto_type_e type;
-    unsigned int len;
-} proto_hdr_t;
-
 int start_server(unsigned short port, int backlog);
 
 int accept_connections(int server_fd);
@@ -24,9 +15,9 @@ int close_connection(int sock);
 
 void handle_client(int client_sock);
 
-void tick_server();
+void tick_server(void);
 
-void stop_server();
+void stop_server(void);
 
 #endif //ZERO2HERO_SERVER_H
 

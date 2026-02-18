@@ -12,43 +12,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#include "server.h"
+#include "common.h"
 
 #define BUFFER_SIZE 1024
-
-int start_server(unsigned short port, int backlog) {
-    struct sockaddr_in server_info = {0};
-    server_info.sin_addr.s_addr = 0;
-    server_info.sin_family = AF_INET;
-    server_info.sin_port = htons(port);
-
-    const int sfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sfd == -1) {
-        perror("socket");
-        return -1;
-    }
-
-    if (bind(sfd, (struct sockaddr *) &server_info, sizeof(struct sockaddr_in)) == -1) {
-        perror("bind");
-        return -1;
-    }
-
-    if (listen(sfd, backlog) == -1) {
-        perror("listen");
-        return -1;
-    }
-
-    printf("Listening for incoming connections on port: %d\n", port);
-
-    return sfd;
-}
-
-int accept_connections(int server_fd) {
-    struct sockaddr_in client_info;
-    socklen_t client_info_len = sizeof(client_info);
-
-    return accept(server_fd, (struct sockaddr *) &client_info, &client_info_len);
-}
 
 int write_socket(int client_sock, const char *buf) {
     return write(client_sock, buf, strlen(buf));
@@ -78,12 +44,12 @@ int print_server_response(const int sock) {
     return 0;
 }
 
-void handle_server(int fd) {
+void handle_server_response(int fd) {
     char buf[4096] = {0};
     proto_hdr_t *hdr = buf;
     read(fd, hdr, sizeof(proto_hdr_t) + sizeof(int));
     hdr->type = ntohl(hdr->type); // unpack the type
-    hdr->len = ntohs(hdr->len);
+    hdr->len = ntohl(hdr->len);
 
     int *data = &hdr[1];
     *data = ntohl(*data); // protocol version one, packed
@@ -126,6 +92,6 @@ int main(int argc, char *argv[]) {
     }
 
     // print_server_response(client_sock);
-    handle_server(client_sock);
+    handle_server_response(client_sock);
     close_connection(client_sock);
 }

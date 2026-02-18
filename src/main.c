@@ -12,7 +12,7 @@
 #include "../include/common.h"
 #include "../include/parse.h"
 
-void print_usage(char *argv[]) {
+static void print_usage(char *argv[]) {
     printf("Usage: %s [options]\n", argv[0]);
     printf("Options:\n");
     printf("\t-h\t\t\tShow this help and exit\n");
@@ -37,7 +37,7 @@ typedef struct cli_options {
     bool print_usage;
 } cli_options;
 
-cli_options parse_args(int argc, char *argv[]) {
+static cli_options parse_args(int argc, char *argv[]) {
     cli_options opts = {0};
     int c;
     while ((c = getopt(argc, argv, "nlf:a:u:d:p:")) != -1) {
@@ -158,7 +158,7 @@ int main(int argc, char *argv[]) {
     open_res.dbhdr = dbhdr;
 
     rc = read_employees(fd, dbhdr, &employees);
-    printf("employees after read: %p\n", employees);
+    printf("employees after read: %p\n", (void *) employees);
     if (rc != STATUS_SUCCESS) {
         printf("Failed to read employees\n");
         return rc;

@@ -2,6 +2,7 @@
 // Created by mdrozdov on 30.10.25.
 //
 
+#include "common.h"
 #include "server.h"
 
 #include <stdbool.h>
@@ -21,6 +22,8 @@
 typedef enum {
     NEW,
     CONNECTED,
+    HELLO,
+    MESSAGE,
     DISCONNECTED,
 } client_state_e;
 
@@ -110,7 +113,8 @@ int write_socket(const int client_sock, const char *buf) {
 
 int close_connection(const int sock) {
     if (sock == -1) {
-        return 0;
+        printf("Invalid socket fd: %d\n", sock);
+        return -1;
     }
     printf("Closing connection %d\n", sock);
     shutdown(sock, SHUT_RDWR);
@@ -133,6 +137,7 @@ void handle_client(const int sock) {
 }
 
 void handle_read(client_info_t *client) {
+    printf("read");
     const size_t bytes_read = read(client->sock, client->buf, sizeof(client->buf));
     if (bytes_read <= 0) {
         printf("[%d] Client disconnected or erred\n", client->sock);
@@ -147,6 +152,7 @@ void handle_read(client_info_t *client) {
 }
 
 void handle_write(client_info_t *client) {
+    printf("write");
     proto_hdr_t *hdr = client->buf;
 
     hdr->type = htonl(PROTO_HELLO); // pack the type
@@ -206,6 +212,11 @@ void tick_server() {
 }
 
 void stop_server() {
+    if (sfd < 0) {
+        printf("Server was not started, skip stopping\n");
+        return;
+    }
+
     for (int i = 0; i < MAX_CLIENTS; i++) {
         if (clients[i].sock != -1) close_connection(clients[i].sock);
         memset(&clients[i], 0, sizeof(client_info_t));

@@ -13,6 +13,7 @@
     </libraryRoots>
     <excludeRoots>
       <file path="$PROJECT_DIR$/data" />
+      <file path="$PROJECT_DIR$/obj" />
     </excludeRoots>
   </component>
 </project>
